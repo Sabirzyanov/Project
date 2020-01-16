@@ -7,6 +7,8 @@ from pygame import *
 import pyganim
 import os
 
+pygame.init()
+
 
 # Display Parameters
 display_width = 800
@@ -14,7 +16,7 @@ display_height = 640
 size = (display_width, display_height)
 background_color = "#f5f5f5"
 display = pygame.display.set_mode(size)
-pygame.display.set_caption("Super Mario Boy")
+pygame.display.set_caption("PyGame")
 bg = Surface((display_width,display_height))
 bg.fill(Color(background_color))
 
@@ -30,6 +32,8 @@ width = 22
 height = 32
 color = "#888888"
 
+winner = False
+
 jump_power = 10
 acceleration_jump = 1
 grav = 0.35
@@ -44,6 +48,8 @@ platform_color = "#000000"
 # Other Parameters
 FILE_DIR = os.path.dirname(__file__)
 ICON_DIR = os.path.dirname(__file__)
+
+running_game = True
 
 # Sprites
 anim_monster = [('%s/monsters/fire1.png' % ICON_DIR),
@@ -99,11 +105,13 @@ def pause():
 
 class Player(sprite.Sprite):
     def __init__(self, x, y):
+        global winner
         sprite.Sprite.__init__(self)
         self.xvel = 0
         self.startX = x
         self.startY = y
         self.yvel = 0
+        self.winner = winner
         self.onGround = False
         self.image = Surface((width, height))
         self.image.fill(Color(color))
@@ -142,7 +150,6 @@ class Player(sprite.Sprite):
 
         self.boltAnimJump = pyganim.PygAnimation(anim_jump)
         self.boltAnimJump.play()
-        self.winner = False
 
     def update(self, left, right, up, running, platforms):
 
@@ -326,18 +333,19 @@ class Camera(object):
 
     def update(self, target):
         self.state = self.camera_func(self.state, target.rect)
-        
+
+
 def camera_configure(camera, target_rect):
     l, t, _, _ = target_rect
     _, _, w, h = camera
-    l, t = -l+display_width / 2, -t+display_height / 2
+    l, t = -l + display_width / 2, -t + display_height / 2
 
     l = min(0, l)
     l = max(-(camera.width-display_width), l)
     t = max(-(camera.height-display_height), t)
     t = min(0, t)
 
-    return Rect(l, t, w, h) 
+    return Rect(l, t, w, h)
 
 
 def loadLevel():
@@ -354,36 +362,61 @@ def loadLevel():
                 if line[0] != "]":
                     endLine = line.find("|")
                     level.append(line[0: endLine])
-                    
+
         if line[0] != "":
-         commands = line.split()
-         if len(commands) > 1:
-            if commands[0] == "player":
-                playerX= int(commands[1])
-                playerY = int(commands[2])
-            # if commands[0] == "portal":
-            #     tp = BlockTeleport(int(commands[1]),int(commands[2]),int(commands[3]),int(commands[4]))
-            #     entities.add(tp)
-            #     platforms.append(tp)
-            #     animatedEntities.add(tp)
-            if commands[0] == "monster":
-                mn = Monster(int(commands[1]),int(commands[2]),int(commands[3]),int(commands[4]),int(commands[5]),int(commands[6]))
-                entities.add(mn)
-                platforms.append(mn)
-                monsters.add(mn)
+            commands = line.split()
+            if len(commands) > 1:
+                if commands[0] == "player":
+                    playerX = int(commands[1])
+                    playerY = int(commands[2])
+                if commands[0] == "monster":
+                    mn = Monster(int(commands[1]), int(commands[2]), int(commands[3]), int(commands[4]),
+                                 int(commands[5]), int(commands[6]))
+                    entities.add(mn)
+                    platforms.append(mn)
+                    monsters.add(mn)
+
+
+def start_screen():
+    global display_width, display_height
+    intro_text = ["Press any key on Mouse to continue",
+                  "Rules: You must reach the Princess, ",
+                  "while not touching monsters and spikes"]
+
+    fon_image = pygame.image.load('fon.jpg')
+    fon = pygame.transform.scale(fon_image, (display_width, display_height))
+    display.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        display.blit(string_rendered, intro_rect)
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == MOUSEBUTTONDOWN:
+                return
+        pygame.display.update()
 
 
 def main():
+    start_screen()
     loadLevel()
     pygame.init()
 
     left = right = False
     up = False
     running = False
-     
+
     hero = Player(playerX, playerY)
     entities.add(hero)
-           
+
     timer = pygame.time.Clock()
     x = y = 0
     for row in level:
@@ -401,16 +434,16 @@ def main():
                 entities.add(pr)
                 platforms.append(pr)
                 animatedEntities.add(pr)
-   
+
             x += platform_width
         y += platform_height
         x = 0
-    
+
     total_level_width = len(level[0]) * platform_width
     total_level_height = len(level) * platform_height
-    
-    camera = Camera(camera_configure, total_level_width, total_level_height) 
-    
+
+    camera = Camera(camera_configure, total_level_width, total_level_height)
+
     while not hero.winner:
         timer.tick(60)
         for e in pygame.event.get():
@@ -433,7 +466,8 @@ def main():
                 left = False
             if e.type == KEYUP and e.key == K_LSHIFT:
                 running = False
-            if e.type == KEYUP and e.key == K_p:
+
+            if e.type == KEYDOWN and e.key == K_p:
                 pause()
 
         display.blit(bg, (0,0))
@@ -444,7 +478,7 @@ def main():
         for e in entities:
             display.blit(e.image, camera.apply(e))
         pygame.display.update()
-        
+
 level = []
 entities = pygame.sprite.Group()
 animatedEntities = pygame.sprite.Group()
