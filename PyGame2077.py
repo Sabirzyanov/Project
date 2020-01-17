@@ -7,6 +7,7 @@ from pygame import *
 import pyganim
 import os
 
+# Pygame Initialization
 pygame.init()
 
 
@@ -68,11 +69,13 @@ anim_walk_right = [('%s/mario/r1.png' % ICON_DIR),
                    ('%s/mario/r3.png' % ICON_DIR),
                    ('%s/mario/r4.png' % ICON_DIR),
                    ('%s/mario/r5.png' % ICON_DIR)]
+
 anim_walk_left = [('%s/mario/l1.png' % ICON_DIR),
                   ('%s/mario/l2.png' % ICON_DIR),
                   ('%s/mario/l3.png' % ICON_DIR),
                   ('%s/mario/l4.png' % ICON_DIR),
                   ('%s/mario/l5.png' % ICON_DIR)]
+
 anim_jump_left = [('%s/mario/jl.png' % ICON_DIR, 0.1)]
 anim_jump_right = [('%s/mario/jr.png' % ICON_DIR, 0.1)]
 anim_jump = [('%s/mario/j.png' % ICON_DIR, 0.1)]
@@ -112,6 +115,7 @@ class Player(sprite.Sprite):
         self.startY = y
         self.yvel = 0
         self.winner = winner
+
         self.onGround = False
         self.image = Surface((width, height))
         self.image.fill(Color(color))
@@ -120,6 +124,7 @@ class Player(sprite.Sprite):
 
         boltAnim = []
         boltAnimSuperSpeed = []
+
         for anim in anim_walk_right:
             boltAnim.append((anim, anim_delay))
             boltAnimSuperSpeed.append((anim, acceleration_anim))
@@ -130,6 +135,7 @@ class Player(sprite.Sprite):
 
         boltAnim = []
         boltAnimSuperSpeed = []
+
         for anim in anim_walk_left:
             boltAnim.append((anim, anim_delay))
             boltAnimSuperSpeed.append((anim, acceleration_anim))
@@ -212,6 +218,7 @@ class Player(sprite.Sprite):
                     self.teleporting(p.goX, p.goY)
                 elif isinstance(p, Princess):
                     self.winner = True
+
                 else:
                     if xvel > 0:
                         self.rect.right = p.rect.left
@@ -250,6 +257,7 @@ class Monster(sprite.Sprite):
         self.maxLengthUp = maxLengthUp
         self.xvel = left
         self.yvel = up
+
         boltAnim = []
         for anim in anim_monster:
             boltAnim.append((anim, 0.3))
@@ -298,6 +306,7 @@ class BlockTeleport(Platform):
         Platform.__init__(self, x, y)
         self.goX = goX
         self.goY = goY
+
         boltAnim = []
         for anim in anim_teleport:
             boltAnim.append((anim, 0.3))
@@ -313,6 +322,7 @@ class Princess(Platform):
     def __init__(self, x, y):
         Platform.__init__(self, x, y)
         boltAnim = []
+
         for anim in anim_princess:
             boltAnim.append((anim, 0.8))
         self.boltAnim = pyganim.PygAnimation(boltAnim)
@@ -336,6 +346,7 @@ class Camera(object):
 
 
 def camera_configure(camera, target_rect):
+
     l, t, _, _ = target_rect
     _, _, w, h = camera
     l, t = -l + display_width / 2, -t + display_height / 2
@@ -446,9 +457,11 @@ def main():
 
     while not hero.winner:
         timer.tick(60)
+
         for e in pygame.event.get():
             if e.type == QUIT:
                 raise SystemExit
+
             if e.type == KEYDOWN and e.key == K_UP:
                 up = True
             if e.type == KEYDOWN and e.key == K_LEFT:
@@ -478,6 +491,7 @@ def main():
         for e in entities:
             display.blit(e.image, camera.apply(e))
         pygame.display.update()
+
 
 level = []
 entities = pygame.sprite.Group()
