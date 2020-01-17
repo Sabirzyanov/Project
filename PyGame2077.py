@@ -45,6 +45,8 @@ platform_width = 32
 platform_height = 32
 platform_color = "#000000"
 
+player_life = 3
+
 # Other Parameters
 FILE_DIR = os.path.dirname(__file__)
 ICON_DIR = os.path.dirname(__file__)
@@ -107,7 +109,7 @@ def pause():
 
 class Player(sprite.Sprite):
     def __init__(self, x, y):
-        global winner, game_finish
+        global winner, game_finish, player_life
         sprite.Sprite.__init__(self)
         self.xvel = 0
         self.startX = x
@@ -115,6 +117,8 @@ class Player(sprite.Sprite):
         self.yvel = 0
         self.winner = winner
         self.game_finish = game_finish
+
+        self.player_life = player_life
 
         self.onGround = False
         self.image = Surface((width, height))
@@ -239,8 +243,13 @@ class Player(sprite.Sprite):
         self.rect.y = goY
 
     def die(self):
-        time.wait(500)
-        self.teleporting(self.startX, self.startY)
+        if self.player_life > 0:
+            time.wait(500)
+            self.teleporting(self.startX, self.startY)
+            self.player_life -= 1
+            print(self.player_life)
+        else:
+            game_lose()
 
 
 class Monster(sprite.Sprite):
