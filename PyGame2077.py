@@ -400,7 +400,9 @@ def start_screen():
     global display_width, display_height
     intro_text = ["Press any key on Mouse to continue",
                   "Rules: You must reach the Princess, ",
-                  "while not touching monsters and spikes"]
+                  "while not touching monsters and spikes.",
+                  "You have 3 life. If touch monsters or spikes, ",
+                  "1 life is taken away."]
 
     fon_image = pygame.image.load('fon.jpg')
     fon = pygame.transform.scale(fon_image, (display_width, display_height))
