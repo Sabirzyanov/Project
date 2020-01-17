@@ -10,7 +10,6 @@ import os
 # Pygame Initialization
 pygame.init()
 
-
 # Display Parameters
 display_width = 800
 display_height = 640
