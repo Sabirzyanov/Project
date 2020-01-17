@@ -18,8 +18,6 @@ size = (display_width, display_height)
 background_color = "#000000"
 display = pygame.display.set_mode(size)
 pygame.display.set_caption("PyGame")
-bg = Surface((display_width,display_height))
-bg.fill(Color(background_color))
 
 # Enemy Parameters
 monster_width = 32
@@ -34,6 +32,7 @@ height = 32
 color = "#888888"
 
 winner = False
+game_finish = False
 
 jump_power = 10
 acceleration_jump = 1
@@ -96,7 +95,7 @@ def pause():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                quit()
+                exit()
         print_text('Paused. Press enter to continue', 160, 300)
 
         keys = pygame.key.get_pressed()
@@ -108,13 +107,14 @@ def pause():
 
 class Player(sprite.Sprite):
     def __init__(self, x, y):
-        global winner
+        global winner, game_finish
         sprite.Sprite.__init__(self)
         self.xvel = 0
         self.startX = x
         self.startY = y
         self.yvel = 0
         self.winner = winner
+        self.game_finish = game_finish
 
         self.onGround = False
         self.image = Surface((width, height))
@@ -217,8 +217,7 @@ class Player(sprite.Sprite):
                 elif isinstance(p, BlockTeleport):
                     self.teleporting(p.goX, p.goY)
                 elif isinstance(p, Princess):
-                    self.winner = True
-
+                    game_lose()
                 else:
                     if xvel > 0:
                         self.rect.right = p.rect.left
@@ -408,16 +407,38 @@ def start_screen():
         text_coord += intro_rect.height
         display.blit(string_rendered, intro_rect)
     while True:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-            if event.type == MOUSEBUTTONDOWN:
+            if event.type == KEYDOWN:
                 return
         pygame.display.update()
 
 
+def game_lose():
+    global display_width, display_height, running_game
+
+    fon_image = pygame.image.load('game-over.png')
+    fon = pygame.transform.scale(fon_image, (display_width, display_height))
+    display.blit(fon, (0, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            pygame.quit()
+            exit()
+        pygame.display.update()
+
+
 def main():
+    global running_game, game_finish
+
+    if game_finish == True:
+        game_lose()
     start_screen()
     loadLevel()
     pygame.init()
@@ -456,12 +477,12 @@ def main():
 
     camera = Camera(camera_configure, total_level_width, total_level_height)
 
-    while not hero.winner:
+    while running_game:
         timer.tick(60)
 
         for e in pygame.event.get():
             if e.type == QUIT:
-                raise SystemExit
+                 running_game = False
 
             if e.type == KEYDOWN and e.key == K_UP:
                 up = True
@@ -484,10 +505,12 @@ def main():
             if e.type == KEYDOWN and e.key == K_p:
                 pause()
 
-        display.blit(bg, (0,0))
+        display.fill(Color(background_color))
         animatedEntities.update()
         monsters.update(platforms)
         camera.update(hero)
+        all_sprites.draw(display)
+        all_sprites.update()
         hero.update(left, right, up, running, platforms)
         for e in entities:
             display.blit(e.image, camera.apply(e))
@@ -498,5 +521,7 @@ level = []
 entities = pygame.sprite.Group()
 animatedEntities = pygame.sprite.Group()
 monsters = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
 platforms = []
 main()
+quit()
