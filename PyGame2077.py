@@ -15,6 +15,7 @@ pygame.init()
 display_width = 800
 display_height = 640
 size = (display_width, display_height)
+
 background_color = "#000000"
 display = pygame.display.set_mode(size)
 pygame.display.set_caption("PyGame")
