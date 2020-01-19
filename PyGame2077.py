@@ -428,7 +428,7 @@ def loadLevel():
 # Intro
 def start_screen():
     global display_width, display_height
-    intro_text = ["Press any key on Mouse to continue",
+    intro_text = ["Press any key to continue",
                   "Rules: You must reach the Princess, ",
                   "while not touching monsters and spikes.",
                   "You have 3 life. If touch monsters or spikes, ",
