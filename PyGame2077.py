@@ -52,6 +52,7 @@ FILE_DIR = os.path.dirname(__file__)
 ICON_DIR = os.path.dirname(__file__)
 
 running_game = True
+running_game_2 = False
 
 # Sprites
 anim_monster = [('%s/monsters/fire1.png' % ICON_DIR),
@@ -221,7 +222,7 @@ class Player(sprite.Sprite):
                 elif isinstance(p, BlockTeleport):
                     self.teleporting(p.goX, p.goY)
                 elif isinstance(p, Princess):
-                    game_lose()
+                    game_finish()
                 else:
                     if xvel > 0:
                         self.rect.right = p.rect.left
@@ -367,6 +368,34 @@ def camera_configure(camera, target_rect):
     return Rect(l, t, w, h)
 
 
+def loadLevelTraining():
+    global playerX, playerY
+
+    levelFile = open('%s/levels/train_level.txt' % FILE_DIR)
+    line = " "
+    commands = []
+    while line[0] != "/":
+        line = levelFile.readline()
+        if line[0] == "[":
+            while line[0] != "]":
+                line = levelFile.readline()
+                if line[0] != "]":
+                    endLine = line.find("|")
+                    level_2.append(line[0: endLine])
+
+        if line[0] != "":
+            commands = line.split()
+            if len(commands) > 1:
+                if commands[0] == "player":
+                    playerX = int(commands[1])
+                    playerY = int(commands[2])
+                if commands[0] == "monster":
+                    mn = Monster(int(commands[1]), int(commands[2]), int(commands[3]), int(commands[4]),
+                                 int(commands[5]), int(commands[6]))
+                    entities.add(mn)
+                    platforms.append(mn)
+                    monsters.add(mn)
+
 def loadLevel():
     global playerX, playerY
 
@@ -396,6 +425,7 @@ def loadLevel():
                     monsters.add(mn)
 
 
+# Intro
 def start_screen():
     global display_width, display_height
     intro_text = ["Press any key on Mouse to continue",
@@ -421,12 +451,15 @@ def start_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                exit()
             if event.type == KEYDOWN:
                 return
         pygame.display.update()
 
 
+# You lose
 def game_lose():
+    global running_game_2, running_game
     global display_width, display_height, running_game
 
     fon_image = pygame.image.load('game-over.png')
@@ -445,12 +478,130 @@ def game_lose():
         pygame.display.update()
 
 
+# Game Win
+def game_finish():
+    global display_width, display_height, running_game, running_game_2
+
+    fon_image = pygame.image.load('level_complete.jpg')
+    fon = pygame.transform.scale(fon_image, (display_width, display_height))
+    display.blit(fon, (0, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            pygame.quit()
+            exit()
+
+        if running_game_2:
+            if keys[pygame.K_ESCAPE]:
+                running_game_2 = False
+                exit()
+
+        if not running_game_2:
+            if keys[pygame.K_RETURN]:
+                running_game_2 = True
+                running_game = False
+                all_sprites.empty()
+                animatedEntities.empty()
+                monsters.empty()
+                entities.empty()
+                platforms.clear()
+                level_2.clear()
+                second_main()
+        pygame.display.update()
+
+
+# First Level
 def main():
     global running_game, game_finish
 
-    if game_finish == True:
-        game_lose()
     start_screen()
+    loadLevelTraining()
+    pygame.init()
+
+    left = right = False
+    up = False
+    running = False
+
+    hero = Player(playerX, playerY)
+    entities.add(hero)
+
+    timer = pygame.time.Clock()
+    x = y = 0
+    for row in level_2:
+        for col in row:
+            if col == "-":
+                pf = Platform(x, y)
+                entities.add(pf)
+                platforms.append(pf)
+            if col == "*":
+                bd = BlockDie(x, y)
+                entities.add(bd)
+                platforms.append(bd)
+            if col == "P":
+                pr = Princess(x, y)
+                entities.add(pr)
+                platforms.append(pr)
+                animatedEntities.add(pr)
+
+            x += platform_width
+        y += platform_height
+        x = 0
+
+    total_level_width = len(level_2[0]) * platform_width
+    total_level_height = len(level_2) * platform_height
+
+    camera = Camera(camera_configure, total_level_width, total_level_height)
+
+    while running_game:
+        timer.tick(60)
+
+        for e in pygame.event.get():
+            if e.type == QUIT:
+                running_game = False
+                return
+
+            if e.type == KEYDOWN and e.key == K_UP:
+                up = True
+            if e.type == KEYDOWN and e.key == K_LEFT:
+                left = True
+            if e.type == KEYDOWN and e.key == K_RIGHT:
+                right = True
+            if e.type == KEYDOWN and e.key == K_LSHIFT:
+                running = True
+
+            if e.type == KEYUP and e.key == K_UP:
+                up = False
+            if e.type == KEYUP and e.key == K_RIGHT:
+                right = False
+            if e.type == KEYUP and e.key == K_LEFT:
+                left = False
+            if e.type == KEYUP and e.key == K_LSHIFT:
+                running = False
+
+            if e.type == KEYDOWN and e.key == K_p:
+                pause()
+
+        display.fill(Color(background_color))
+        animatedEntities.update()
+        monsters.update(platforms)
+        camera.update(hero)
+        all_sprites.draw(display)
+        all_sprites.update()
+        hero.update(left, right, up, running, platforms)
+        for e in entities:
+            display.blit(e.image, camera.apply(e))
+        pygame.display.update()
+
+
+# Second Level
+def second_main():
+    global running_game, game_finish, running_game_2
+
     loadLevel()
     pygame.init()
 
@@ -488,12 +639,13 @@ def main():
 
     camera = Camera(camera_configure, total_level_width, total_level_height)
 
-    while running_game:
+    while running_game_2:
         timer.tick(60)
 
         for e in pygame.event.get():
             if e.type == QUIT:
-                 running_game = False
+                running_game_2 = False
+                return
 
             if e.type == KEYDOWN and e.key == K_UP:
                 up = True
@@ -529,10 +681,14 @@ def main():
 
 
 level = []
+level_2 = []
 entities = pygame.sprite.Group()
 animatedEntities = pygame.sprite.Group()
 monsters = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 platforms = []
+
+
 main()
+second_main()
 quit()
