@@ -396,6 +396,7 @@ def loadLevelTraining():
                     platforms.append(mn)
                     monsters.add(mn)
 
+
 def loadLevel():
     global playerX, playerY
 
@@ -687,7 +688,6 @@ animatedEntities = pygame.sprite.Group()
 monsters = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 platforms = []
-
 
 main()
 second_main()
