@@ -458,6 +458,31 @@ def start_screen():
         pygame.display.update()
 
 
+def exit_game():
+    exit_loop = True
+    exit_game = False
+
+    while exit_loop:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit_loop = False
+                exit()
+
+        print_text('Are you sure escape', 200, 200)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_q]:
+            exit_game = True
+
+        if exit_game:
+            pygame.quit()
+            exit()
+
+        if keys[pygame.K_RETURN]:
+            return
+
+        pygame.display.update()
+
+
 # You lose
 def game_lose():
     global running_game_2, running_game
@@ -518,7 +543,7 @@ def game_finish():
 
 # First Level
 def main():
-    global running_game, game_finish
+    global running_game, game_finish, esc_count
 
     start_screen()
     loadLevelTraining()
@@ -586,6 +611,9 @@ def main():
 
             if e.type == KEYDOWN and e.key == K_p:
                 pause()
+
+            if e.type == KEYDOWN and e.key == K_ESCAPE:
+                exit_game()
 
         display.fill(Color(background_color))
         animatedEntities.update()
@@ -668,6 +696,9 @@ def second_main():
 
             if e.type == KEYDOWN and e.key == K_p:
                 pause()
+
+            if e.type == KEYDOWN and e.key == K_ESCAPE:
+                exit_game()
 
         display.fill(Color(background_color))
         animatedEntities.update()
