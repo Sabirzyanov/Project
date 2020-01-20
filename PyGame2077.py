@@ -468,7 +468,7 @@ def exit_game():
                 exit_loop = False
                 exit()
 
-        print_text('Are you sure escape', 200, 200)
+        print_text('Are you sure escape(Press Q).', 200, 200)
         keys = pygame.key.get_pressed()
         if keys[pygame.K_q]:
             exit_game = True
